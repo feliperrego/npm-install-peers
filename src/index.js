@@ -11,8 +11,8 @@ const argv = require('minimist')(process.argv.slice(2))
 
 let packagePath
 
-if (argv.prefix && typeof argv.prefix === 'string') {
-    packagePath = path.resolve(argv.prefix, 'package.json')
+if (argv.from && typeof argv.from === 'string') {
+    packagePath = path.resolve(argv.from, 'package.json')
 } else {
     packagePath = 'package.json'
 }
@@ -39,10 +39,15 @@ fs.readFile(packagePath, 'utf-8', function(error, contents) {
         return `${key}@${peerDependencies[key]}`
     })
 
-    let peerInstallOptions=packageContents.peerInstallOptions
+    npm.load(function() {
+        npm.commands.install(packages, function(er) {
+            // log errors or data
+            console.log('log errors or data:', er || 'No errors!')
+        })
 
-    peerInstallOptions['save'] = false;
-    npm.load(peerInstallOptions, function() {
-        npm.commands.install(packages)
+        npm.on('log', function(message) {
+            // log installation progress
+            console.log(message)
+        })
     })
 })
